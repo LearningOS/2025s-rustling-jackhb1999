@@ -3,7 +3,7 @@
 	This problem requires you to implement a basic interface for a binary tree
 */
 
-//I AM NOT DONE
+
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
@@ -37,6 +37,25 @@ where
             right: None,
         }
     }
+    fn insert(&mut self, value : T){
+        match value.cmp(&self.value) {
+            Ordering::Less => {
+                if self.left.is_none(){
+                    self.left = Some(Box::new(TreeNode::new(value)));
+                } else {
+                    self.left.as_mut().unwrap().insert(value); // 递归调用, 但要解包
+                }
+            }
+            Ordering::Greater => {
+                if self.right.is_none() {
+                    self.right = Some(Box::new(TreeNode::new(value)));
+                } else {
+                    self.right.as_mut().unwrap().insert(value);
+                }
+            }
+            Ordering::Equal => {} // 重复不插入?
+        }
+    }
 }
 
 impl<T> BinarySearchTree<T>
@@ -50,25 +69,32 @@ where
 
     // Insert a value into the BST
     fn insert(&mut self, value: T) {
-        //TODO
+        match self.root {
+            None => self.root = Some(Box::new(TreeNode::new(value))),
+            Some(ref mut node) => node.insert(value), // 自动解引用
+        } // 这里模式匹配只能使用ref而不是&,奇怪的规则?
+        // 意思就是 & 只能用在表达式中, 不可以用在模式匹配中
+        //Option<Box<TreeNode<T>>>
+        // 真正的插入逻辑也绑定在了Node的实现中
     }
 
     // Search for a value in the BST
     fn search(&self, value: T) -> bool {
-        //TODO
-        true
+        fn search_node<T : Ord> (node : &Option<Box<TreeNode<T>>>, value : T) -> bool {
+            match node {
+                None => false,
+                Some(ref n) => match value.cmp(&n.value) {
+                    Ordering::Equal => true,
+                    Ordering::Less => search_node(&n.left, value),
+                    Ordering::Greater => search_node(&n.right, value),
+                }
+            }
+        }
+
+        search_node(&self.root, value)
     }
 }
 
-impl<T> TreeNode<T>
-where
-    T: Ord,
-{
-    // Insert a node into the tree
-    fn insert(&mut self, value: T) {
-        //TODO
-    }
-}
 
 
 #[cfg(test)]
